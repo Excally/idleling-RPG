@@ -2,7 +2,7 @@ import json
 import os
 
 from .constants import MAPS, SAVE_FILE, current_week_key
-from .content import SKILLS
+from .content import SKILLS, healing_potion
 from .models import Item, Player
 
 OLD_TYPES = {"Senjata": "Weapon", "Zirah": "Armor", "Ramuan": "Healing Potion", "Eksplorasi": "Exploration"}
@@ -19,7 +19,21 @@ OLD_RARITIES = {"[Langka]": "[Rare]", "[EPIK]": "[Epic]", "[LEGENDARIS]": "[Lege
 
 
 def item_to_dict(item):
-    return {"name": item.name, "item_type": item.item_type, "behavior": item.behavior, "value": item.value, "quantity": item.quantity, "rarity": item.rarity, "grade": item.grade, "enchantment": item.enchantment}
+    return {
+        "name": item.name,
+        "item_type": item.item_type,
+        "behavior": item.behavior,
+        "value": item.value,
+        "quantity": item.quantity,
+        "rarity": item.rarity,
+        "grade": item.grade,
+        "enchantment": item.enchantment,
+        "attack_bonus": item.attack_bonus,
+        "defense_bonus": item.defense_bonus,
+        "speed_bonus": item.speed_bonus,
+        "crit_chance_bonus": item.crit_chance_bonus,
+        "crit_damage_bonus": item.crit_damage_bonus,
+    }
 
 
 def item_from_dict(data):
@@ -31,10 +45,11 @@ def item_from_dict(data):
     item_type = data.get("item_type", "Misc")
     item_type = OLD_TYPES.get(item_type, item_type)
     if item_type == "Exploration":
-        name = "Healing Potion"
-        item_type = "Healing Potion"
-        behavior = "Consume"
-        value = 50
+        migrated = healing_potion()
+        name = migrated.name
+        item_type = migrated.item_type
+        behavior = migrated.behavior
+        value = migrated.value
     else:
         behavior = data.get("behavior", "Misc")
         value = data.get("value", data.get("base_value", 0))
@@ -43,7 +58,13 @@ def item_from_dict(data):
         if known_rarity in name:
             rarity = known_rarity
             break
-    return Item(name, item_type, behavior, value, data.get("quantity", 1), rarity, data.get("grade", "Standard"), data.get("enchantment", "None"))
+    return Item(
+        name, item_type, behavior, value, data.get("quantity", 1), rarity,
+        data.get("grade", "Standard"), data.get("enchantment", "None"),
+        data.get("attack_bonus", 0), data.get("defense_bonus", 0),
+        data.get("speed_bonus", 0), data.get("crit_chance_bonus", 0.0),
+        data.get("crit_damage_bonus", 0.0),
+    )
 
 
 def save_player(player):

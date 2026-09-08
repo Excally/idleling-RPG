@@ -1,4 +1,4 @@
-from .constants import EQUIPMENT_SLOTS, RARITY_COLORS, color_text
+from .constants import EQUIPMENT_SLOTS, ITEM_TYPE_ORDER, RARITY_ORDER, color_text, rarity_text
 from .models import Item
 
 
@@ -12,37 +12,81 @@ class InventoryService:
         for slot in EQUIPMENT_SLOTS:
             item = self.player.equipment[slot]
             if item:
-                rarity = color_text(item.rarity, RARITY_COLORS.get(item.rarity, ""))
-                print(f"{slot:<11} [EQUIPPED] {item.name} | {rarity} | Power {item.value}")
+                display_name = rarity_text(item.name, item.rarity)
+                rarity = rarity_text(item.rarity, item.rarity)
+                print(f"{slot:<11} [EQUIPPED] {display_name} | {rarity} | Power {item.value}")
             else:
                 print(f"{slot:<11} -- empty --")
 
-    def _show_bag(self):
+    def _sorted_inventory(self, sort_mode):
+        if sort_mode == "name":
+            return sorted(self.player.inventory, key=lambda item: item.name.lower())
+        if sort_mode == "rarity":
+            return sorted(self.player.inventory, key=lambda item: (-RARITY_ORDER.get(item.rarity, 0), item.name.lower()))
+        if sort_mode == "power":
+            return sorted(self.player.inventory, key=lambda item: (-item.value, item.name.lower()))
+        return sorted(self.player.inventory, key=lambda item: (ITEM_TYPE_ORDER.get(item.item_type, 99), -item.value, item.name.lower()))
+
+    def _item_stats(self, item):
+        stats = []
+        for label, value in (
+            ("ATK", item.attack_bonus),
+            ("DEF", item.defense_bonus),
+            ("SPD", item.speed_bonus),
+            ("CRIT", f"{item.crit_chance_bonus:.0%}"),
+        ):
+            if value != 0 and value != "0%":
+                stats.append(f"{label} {value:+}" if label != "CRIT" else f"{label} {value}")
+        return " | ".join(stats) if stats else "No combat stats"
+
+    def _show_bag(self, items):
         print("\n--- BAG ---")
         if not self.player.inventory:
             print("Bag is empty.")
             return
-        for index, item in enumerate(self.player.inventory, 1):
-            action = "equip" if item.item_type in EQUIPMENT_SLOTS else "use"
-            grade = f" | {item.grade}" if item.item_type == "Healing Potion" else ""
-            enchantment = f" | Enchant: {item.enchantment}" if item.enchantment != "None" else ""
-            rarity = color_text(item.rarity, RARITY_COLORS.get(item.rarity, ""))
-            print(f"{index}. {item.name} x{item.quantity} | {rarity}{grade} | {item.item_type} | Power {item.value}{enchantment} | {action}")
+        grouped = {}
+        for item in items:
+            section = "Consumables" if item.item_type == "Healing Potion" else item.item_type
+            grouped.setdefault(section, []).append(item)
+        index = 1
+        section_order = list(EQUIPMENT_SLOTS) + ["Consumables", "Misc"]
+        for section in section_order:
+            if section not in grouped:
+                continue
+            print(f"\n[{section.upper()}]")
+            for item in grouped[section]:
+                action = "equip" if item.item_type in EQUIPMENT_SLOTS else "use"
+                display_name = rarity_text(item.name, item.rarity)
+                rarity = rarity_text(item.rarity, item.rarity)
+                print(f"{index:>2}. {display_name} x{item.quantity}")
+                if item.item_type == "Healing Potion":
+                    print(f"    {rarity} | {item.grade} | heals {item.value} HP | {action}")
+                else:
+                    enchantment = f" | {item.enchantment}" if item.enchantment != "None" else ""
+                    print(f"    {rarity} | {self._item_stats(item)} | power {item.value}{enchantment} | {action}")
+                index += 1
 
     def show_and_manage(self):
+        sort_mode = "type"
         while True:
             self.clear_screen()
             print("=== INVENTORY ===")
             self._show_equipment()
-            self._show_bag()
-            choice = input("\nChoose a bag item, or 0 to return: ").strip()
+            sorted_items = self._sorted_inventory(sort_mode)
+            self._show_bag(sorted_items)
+            print(f"Sort: {sort_mode} | Commands: number=equip/use, S=sort, 0=return")
+            choice = input("Choice: ").strip().lower()
             if choice in {"", "0"}:
                 return
-            if not choice.isdigit() or not 1 <= int(choice) <= len(self.player.inventory):
+            if choice == "s":
+                sort_choice = input("Sort by: 1 Type, 2 Name, 3 Rarity, 4 Power, 0 Cancel: ").strip()
+                sort_mode = {"1": "type", "2": "name", "3": "rarity", "4": "power"}.get(sort_choice, sort_mode)
+                continue
+            if not choice.isdigit() or not 1 <= int(choice) <= len(sorted_items):
                 print("Invalid item choice.")
                 input("Press Enter to continue: ")
                 continue
-            item = self.player.inventory[int(choice) - 1]
+            item = sorted_items[int(choice) - 1]
             if item.item_type in self.player.equipment:
                 self._equip(item)
             elif item.item_type == "Healing Potion":

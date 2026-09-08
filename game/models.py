@@ -9,6 +9,27 @@ class Item:
     rarity: str = "Common"
     grade: str = "Standard"
     enchantment: str = "None"
+    attack_bonus: int = 0
+    defense_bonus: int = 0
+    speed_bonus: int = 0
+    crit_chance_bonus: float = 0.0
+    crit_damage_bonus: float = 0.0
+
+    def __post_init__(self):
+        if self.item_type == "Weapon" and self.attack_bonus == 0:
+            self.attack_bonus = self.value
+        elif self.item_type == "Armor" and self.defense_bonus == 0:
+            self.defense_bonus = self.value // 2
+        elif self.item_type == "Helmet" and self.defense_bonus == 0:
+            self.defense_bonus = self.value // 3
+        elif self.item_type == "Gloves" and self.crit_chance_bonus == 0:
+            self.crit_chance_bonus = self.value / 200
+        elif self.item_type == "Boots" and self.speed_bonus == 0:
+            self.speed_bonus = self.value // 2
+        elif self.item_type == "Accessory" and self.attack_bonus == 0:
+            self.attack_bonus = self.value // 2
+            self.defense_bonus = self.value // 3
+            self.crit_damage_bonus = self.value / 100
 
 
 @dataclass
@@ -34,6 +55,8 @@ class Monster:
     is_boss: bool = False
     rank: str = "Normal"
     speed: int = 10
+    defense: int = 0
+    dodge_chance: float = 0.0
 
 
 class Player:
@@ -65,19 +88,23 @@ class Player:
         self.encounters_since_boss = 0
 
     def total_attack(self):
-        weapon = self.equipment["Weapon"]
-        accessory = self.equipment["Accessory"]
-        accessory_attack = accessory.value // 2 if accessory else 0
-        attack = self.stats["ATK"] + (weapon.value if weapon else 0) + accessory_attack
+        attack = self.stats["ATK"]
+        attack += sum(gear.attack_bonus for gear in self.equipment.values() if gear)
         return int(attack * (1.15 if self.has_enchantment("Berserker") and self.hp <= self.max_hp * 0.4 else 1.0))
 
     def total_defense(self):
         defense_slots = ("Armor", "Helmet", "Gloves", "Boots", "Accessory")
-        return sum(self.equipment[slot].value // 2 for slot in defense_slots if self.equipment[slot])
+        return self.stats.get("DEF", 0) + sum(self.equipment[slot].defense_bonus for slot in defense_slots if self.equipment[slot])
 
     def total_speed(self):
         speed = self.stats.get("SPEED", 10)
-        return speed + sum(gear.value // 4 for gear in self.equipment.values() if gear and gear.enchantment == "Swift")
+        return speed + sum(gear.speed_bonus for gear in self.equipment.values() if gear)
+
+    def total_crit_chance(self):
+        return min(1.0, self.stats["CRIT_CHANCE"] + sum(gear.crit_chance_bonus for gear in self.equipment.values() if gear))
+
+    def total_crit_damage(self):
+        return self.stats["CRIT_DMG"] + sum(gear.crit_damage_bonus for gear in self.equipment.values() if gear)
 
     def has_enchantment(self, enchantment):
         return any(gear and gear.enchantment == enchantment for gear in self.equipment.values())

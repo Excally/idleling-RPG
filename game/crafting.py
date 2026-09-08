@@ -11,7 +11,8 @@ class CraftingService:
         while True:
             clear_screen()
             print("\n=== CRAFTING ===")
-            for key, recipe in RECIPES.items():
+            recipes = sorted(RECIPES.items(), key=lambda entry: entry[1]["name"].lower())
+            for key, recipe in recipes:
                 ingredients = ", ".join(f"{name} x{amount}" for name, amount in recipe["cost"].items())
                 print(f"{key}. {recipe['name']} ({ingredients})")
             choice = input("Choose a recipe, or 0 to return: ").strip()

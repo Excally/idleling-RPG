@@ -1,7 +1,7 @@
 import random
 import time
 
-from .constants import COMBAT_RESULT_DELAY, MAPS, MAX_WEEKLY_MOBS, RANK_COLORS, RARITY_COLORS, clear_screen, color_text
+from .constants import COMBAT_RESULT_DELAY, MAPS, MAX_WEEKLY_MOBS, RANK_COLORS, clear_screen, color_text, enter_pressed, rarity_text
 from .content import DROP_RATE_REFERENCE, healing_potion
 from .items import generate_item
 from .monsters import generate_monster
@@ -66,12 +66,18 @@ class ExplorationService:
                     self.player.encounters_since_boss += 1
                 display_name = color_text(enemy.name, RANK_COLORS.get(enemy.rank, ""))
                 rank_label = color_text(enemy.rank, RANK_COLORS.get(enemy.rank, ""))
-                print(f"\nEncounter {self.player.mobs_this_week}/{MAX_WEEKLY_MOBS}: [{rank_label}] {display_name} (HP: {enemy.hp} | ATK: {enemy.attack} | SPD: {enemy.speed})")
+                print("\n" + "=" * 64)
+                print(f"ENCOUNTER {self.player.mobs_this_week}/{MAX_WEEKLY_MOBS}")
+                print(f"Enemy: [{rank_label}] {display_name}")
+                print(f"Stats: HP {enemy.hp} | ATK {enemy.attack} | DEF {enemy.defense} | SPD {enemy.speed} | Dodge {enemy.dodge_chance:.0%}")
+                print("=" * 64)
                 if trigger != "Normal encounter":
                     print(f"  {trigger}.")
                 if not self.combat_service.fight(enemy):
                     break
-                print(f"Defeated {enemy.name}! +{enemy.gold} gold | +{enemy.exp} EXP")
+                print("\n--- VICTORY ---")
+                print(f"Defeated: {enemy.name}")
+                print(f"Rewards: {enemy.gold} gold | {enemy.exp} EXP")
                 self.player.gold += enemy.gold
                 self.player.exp += enemy.exp
                 drops = [f"Material: {random.choice(list(self.player.materials))}"]
@@ -86,11 +92,12 @@ class ExplorationService:
                     drops.append(f"{potion_grade} Healing Potion x1")
                 if random.random() < (0.95 if enemy.rank == "Boss" else 0.65 if enemy.rank == "Miniboss" else 0.3):
                     item_drop = generate_item()
-                    rarity = color_text(item_drop.rarity, RARITY_COLORS.get(item_drop.rarity, ""))
-                    drops.append(f"{rarity} {item_drop.name} [Power: +{item_drop.value}]")
-                print("  Drops:")
+                    display_name = rarity_text(item_drop.name, item_drop.rarity)
+                    rarity = rarity_text(item_drop.rarity, item_drop.rarity)
+                    drops.append(f"{rarity} {display_name} [Power: +{item_drop.value}]")
+                print("Drops:")
                 for drop in drops:
-                    print(f"   - {drop}")
+                    print(f"  - {drop}")
                 self.add_material_drop()
                 if potion_drop:
                     self.player.add_item(healing_potion(potion_grade))
@@ -100,6 +107,9 @@ class ExplorationService:
                 self.player_service.level_up()
                 self.save_callback()
                 time.sleep(COMBAT_RESULT_DELAY)
+                if enter_pressed():
+                    print("Exploration ended. Returning to the adventure menu.")
+                    break
         except KeyboardInterrupt:
             print("\nExploration paused. Returning to the adventure menu.")
         self.player.session_encounters = encounters

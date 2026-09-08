@@ -1,4 +1,4 @@
-from .constants import GREEN, MAX_WEEKLY_MOBS, current_week_key
+from .constants import GREEN, MAX_WEEKLY_MOBS, RESET, current_week_key
 from .formulas import experience_needed
 
 
@@ -22,7 +22,7 @@ class PlayerService:
             self.player.stats["ATK"] += 3
             self.player.max_hp += 10
             self.player.hp = self.player.max_hp
-            print(f"{GREEN}Level up! You are now level {self.player.level}.{GREEN}")
+            print(f"{GREEN}Level up! You are now level {self.player.level}.{RESET}")
 
     def upgrade_stat(self, choice, amount=1):
         upgrades = {"1": ("ATK", 10), "2": ("HP", 15)}

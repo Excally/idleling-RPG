@@ -1,5 +1,6 @@
 from datetime import date
 import os
+import sys
 
 SAVE_FILE = "savegame.json"
 MAX_WEEKLY_MOBS = 100000
@@ -8,6 +9,7 @@ COMBAT_ACTION_DELAY = 0.5
 COMBAT_RESULT_DELAY = 2.0
 
 RESET = "\033[0m"
+BOLD = "\033[1m"
 RED = "\033[91m"
 BLUE = "\033[94m"
 CYAN = "\033[96m"
@@ -18,14 +20,14 @@ GRAY = "\033[90m"
 MAGENTA = "\033[95m"
 
 RARITY_COLORS = {
-    "Common": WHITE,
+    "Common": GRAY,
     "Uncommon": GREEN,
     "Rare": BLUE,
     "Epic": MAGENTA,
-    "Heroic": RED,
+    "Heroic": "\033[91m",
     "Legendary": GOLD,
     "Mythical": "\033[96m",
-    "Primordial": "\033[91m",
+    "Primordial": "\033[1;97m\033[45m",
 }
 
 RANK_COLORS = {"Normal": WHITE, "Miniboss": MAGENTA, "Boss": RED}
@@ -35,13 +37,51 @@ SKILL_CATEGORY_COLORS = {"Damage": RED, "Buff": GREEN, "Debuff": GOLD, "Control"
 def color_text(text, color):
     return f"{color}{text}{RESET}"
 
+
+def rarity_text(text, rarity):
+    return color_text(text, RARITY_COLORS.get(rarity, WHITE))
+
+
+def health_text(current, maximum):
+    ratio = current / maximum if maximum else 0
+    color = GREEN if ratio > 0.6 else GOLD if ratio > 0.3 else RED
+    return color_text(f"{current}/{maximum}", color)
+
 EQUIPMENT_SLOTS = ("Weapon", "Armor", "Helmet", "Gloves", "Boots", "Accessory")
+ITEM_TYPE_ORDER = {slot: index for index, slot in enumerate(EQUIPMENT_SLOTS)}
+ITEM_TYPE_ORDER.update({"Healing Potion": 20, "Misc": 30})
+RARITY_ORDER = {
+    "Common": 0,
+    "Uncommon": 1,
+    "Rare": 2,
+    "Epic": 3,
+    "Heroic": 4,
+    "Legendary": 5,
+    "Mythical": 6,
+    "Primordial": 7,
+}
+SKILL_CATEGORY_ORDER = {"Damage": 0, "Buff": 1, "Debuff": 2, "Control": 3, "Passive": 4, "Utility": 5, "Active": 6}
 
 
 def clear_screen():
     if os.name == "nt":
         os.system("cls")
     print("\033[2J\033[3J\033[H", end="", flush=True)
+
+
+def enter_pressed():
+    if os.name == "nt":
+        import msvcrt
+
+        if not msvcrt.kbhit():
+            return False
+        return msvcrt.getwch() in {"\r", "\n"}
+    import select
+
+    ready, _, _ = select.select([sys.stdin], [], [], 0)
+    if not ready:
+        return False
+    return sys.stdin.readline().strip() == ""
 
 MAPS = {
     "1": {

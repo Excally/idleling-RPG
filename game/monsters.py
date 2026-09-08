@@ -36,4 +36,6 @@ def generate_monster(player_level, map_data, encounters_since_miniboss, encounte
     exp = int(20 * monster_level * rank_stats["reward"])
     gold = int(10 * monster_level * rank_stats["reward"])
     speed = max(5, int(10 + monster_level * 0.8 + (5 if rank == "Miniboss" else 10 if rank == "Boss" else 0)))
-    return Monster(name, hp, exp, gold, attack, rank == "Boss", rank, speed), trigger
+    defense = int(monster_level * (1 if rank == "Normal" else 2 if rank == "Miniboss" else 4))
+    dodge_chance = 0.05 if rank == "Normal" else 0.08 if rank == "Miniboss" else 0.12
+    return Monster(name, hp, exp, gold, attack, rank == "Boss", rank, speed, defense, dodge_chance), trigger

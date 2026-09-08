@@ -11,7 +11,8 @@ class ShopService:
         while True:
             clear_screen()
             print("\n=== SHOP ===")
-            for key, product in SHOP_ITEMS.items():
+            products = sorted(SHOP_ITEMS.items(), key=lambda entry: (entry[1]["price"], entry[1]["name"].lower()))
+            for key, product in products:
                 print(f"{key}. {product['name']} - {product['price']} gold")
             choice = input("Choose an item, or 0 to return: ").strip()
             if choice in {"", "0"}:

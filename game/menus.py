@@ -1,4 +1,4 @@
-from .constants import EQUIPMENT_SLOTS, MAPS, MAX_WEEKLY_MOBS, SKILL_CATEGORY_COLORS, clear_screen, color_text
+from .constants import EQUIPMENT_SLOTS, MAPS, MAX_WEEKLY_MOBS, SKILL_CATEGORY_COLORS, SKILL_CATEGORY_ORDER, clear_screen, color_text, health_text
 
 
 class MenuService:
@@ -18,8 +18,8 @@ class MenuService:
     def show_status(self):
         item_count = sum(item.quantity for item in self.player.inventory)
         print("\n--- CHARACTER ---")
-        print(f"Level {self.player.level} | HP {self.player.hp}/{self.player.max_hp} | Gold {self.player.gold}")
-        print(f"ATK {self.player.total_attack()} | DEF {self.player.total_defense()} | XP {self.player.exp}")
+        print(f"Level {self.player.level} | HP {health_text(self.player.hp, self.player.max_hp)} | Gold {self.player.gold}")
+        print(f"ATK {self.player.total_attack()} | DEF {self.player.total_defense()} | SPD {self.player.total_speed()} | CRIT {self.player.total_crit_chance():.0%} | XP {self.player.exp}")
         print("Gear: " + " | ".join(
             f"{slot}: {self.player.equipment[slot].name if self.player.equipment[slot] else '--'}"
             for slot in EQUIPMENT_SLOTS
@@ -49,16 +49,28 @@ class MenuService:
         while True:
             clear_screen()
             print("\n--- SKILLS ---")
-            for index, skill in enumerate(self.player.skills, 1):
-                marker = "ACTIVE" if index - 1 == self.player.active_skill else ""
+            active_skills = [skill for skill in self.player.skills if not skill.passive]
+            passive_skills = [skill for skill in self.player.skills if skill.passive]
+            active_skills = sorted(active_skills, key=lambda skill: (SKILL_CATEGORY_ORDER.get(skill.category, 99), skill.name.lower()))
+            passive_skills = sorted(passive_skills, key=lambda skill: skill.name.lower())
+            print("Active skills:")
+            for index, skill in enumerate(active_skills, 1):
+                marker = "SELECTED" if index - 1 == self.player.active_skill else ""
                 category = color_text(skill.category, SKILL_CATEGORY_COLORS.get(skill.category, ""))
-                print(f"{index}. {skill.name} | {category} | {skill.proc_chance:.0%} chance | x{skill.damage_multiplier} damage {marker}")
+                print(f"{index:>2}. {skill.name} [{category}] {marker}")
+                print(f"    Trigger {skill.proc_chance:.0%} | Damage x{skill.damage_multiplier:.1f} | {skill.effect_text}")
+            if passive_skills:
+                print("\nPassive skills:")
+                for skill in passive_skills:
+                    category = color_text(skill.category, SKILL_CATEGORY_COLORS.get(skill.category, ""))
+                    print(f"- {skill.name} [{category}]")
+                    print(f"  Always active | {skill.effect_text}")
             choice = input("Skill number, or 0 to return: ").strip()
             if choice in {"", "0"}:
                 return
-            if choice.isdigit() and 1 <= int(choice) <= len(self.player.skills):
+            if choice.isdigit() and 1 <= int(choice) <= len(active_skills):
                 self.player.active_skill = int(choice) - 1
-                print(f"Active skill: {self.player.skills[self.player.active_skill].name}.")
+                print(f"Active skill: {active_skills[self.player.active_skill].name}.")
                 input("Press Enter to continue managing skills: ")
 
     def train(self):
@@ -83,6 +95,18 @@ class MenuService:
         self.player.gold -= 20
         self.player.hp = self.player.max_hp
         print(f"HP restored to {self.player.hp}/{self.player.max_hp}.")
+
+    def show_help(self):
+        clear_screen()
+        print("=== HELP ===")
+        print("Explore: choose a map, fight encounters, collect rewards, and press Y after combat to stop.")
+        print("Combat: speed decides initiative; your selected non-passive skill is used automatically.")
+        print("Gear: equip items from Inventory. Enchantments modify attack, defense, speed, crit, or attacks.")
+        print("Skills: passive skills always apply; active skills trigger during combat by chance.")
+        print("Ranks: Normal, Miniboss, and Boss. Pity counters increase when special ranks do not appear.")
+        print("Rarity: Common, Uncommon, Rare, Epic, Heroic, Legendary, Mythical, Primordial.")
+        print("Shop and Crafting support bulk quantities. Use 0 to leave a feature.")
+        input("Press Enter to return: ")
 
     def manage_menu(self):
         while True:
@@ -136,6 +160,7 @@ class MenuService:
             print("3. Town")
             print("4. Change Map")
             print("5. View Status")
+            print("6. Help")
             print("0. Save and Exit")
             choice = input("Choice: ").strip()
             if choice == "1":
@@ -148,6 +173,8 @@ class MenuService:
                 self.choose_map()
             elif choice == "5":
                 self.show_status()
+            elif choice == "6":
+                self.show_help()
             elif choice == "0":
                 return
             else:
