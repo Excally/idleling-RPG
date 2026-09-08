@@ -2,7 +2,9 @@ from datetime import date
 import os
 import sys
 
-SAVE_FILE = "savegame.json"
+SAVE_FILE = "savegame.dat"
+LEGACY_SAVE_FILE = "savegame.json"
+SAVE_KEY_FILE = ".savegame.key"
 MAX_WEEKLY_MOBS = 100000
 RANDOM_POTION_CHANCE = 0.01
 COMBAT_ACTION_DELAY = 0.5

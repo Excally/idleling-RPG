@@ -1,7 +1,9 @@
 import json
 import os
 
-from .constants import MAPS, SAVE_FILE, current_week_key
+from cryptography.fernet import Fernet, InvalidToken
+
+from .constants import LEGACY_SAVE_FILE, MAPS, SAVE_FILE, SAVE_KEY_FILE, current_week_key
 from .content import SKILLS, healing_potion
 from .models import Item, Player
 
@@ -87,20 +89,46 @@ def save_player(player):
         "encounters_since_miniboss": player.encounters_since_miniboss,
         "encounters_since_boss": player.encounters_since_boss,
     }
-    with open(SAVE_FILE, "w", encoding="utf-8") as save_file:
-        json.dump(data, save_file, indent=4)
+    key = _load_or_create_key()
+    encrypted = Fernet(key).encrypt(json.dumps(data).encode("utf-8"))
+    temporary_file = f"{SAVE_FILE}.tmp"
+    with open(temporary_file, "wb") as save_file:
+        save_file.write(encrypted)
+    os.replace(temporary_file, SAVE_FILE)
+    if os.path.exists(LEGACY_SAVE_FILE):
+        os.remove(LEGACY_SAVE_FILE)
+
+
+def _load_or_create_key():
+    if os.path.exists(SAVE_KEY_FILE):
+        with open(SAVE_KEY_FILE, "rb") as key_file:
+            return key_file.read().strip()
+    key = Fernet.generate_key()
+    with open(SAVE_KEY_FILE, "wb") as key_file:
+        key_file.write(key)
+    return key
+
+
+def _load_save_data():
+    if os.path.exists(SAVE_FILE):
+        key = _load_or_create_key()
+        with open(SAVE_FILE, "rb") as save_file:
+            return json.loads(Fernet(key).decrypt(save_file.read()).decode("utf-8"))
+    if os.path.exists(LEGACY_SAVE_FILE):
+        with open(LEGACY_SAVE_FILE, "r", encoding="utf-8") as save_file:
+            return json.load(save_file)
+    return None
 
 
 def load_player():
     player = Player()
     player.skills = list(SKILLS)
-    if not os.path.exists(SAVE_FILE):
+    if not os.path.exists(SAVE_FILE) and not os.path.exists(LEGACY_SAVE_FILE):
         player.week_key = current_week_key()
         print("No save file found. Starting a new adventure.")
         return player
     try:
-        with open(SAVE_FILE, "r", encoding="utf-8") as save_file:
-            data = json.load(save_file)
+        data = _load_save_data()
         player.level = data.get("level", player.level)
         player.exp = data.get("exp", player.exp)
         player.gold = data.get("gold", player.gold)
@@ -129,6 +157,6 @@ def load_player():
             player.week_key = current_week_key()
             player.mobs_this_week = 0
         print("Save loaded successfully.")
-    except (OSError, ValueError, TypeError, KeyError):
-        print("Save file could not be loaded. Starting a new adventure.")
+    except (OSError, ValueError, TypeError, KeyError, InvalidToken):
+        print("Save file could not be verified or loaded. Starting a new adventure.")
     return player

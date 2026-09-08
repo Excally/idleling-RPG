@@ -3,3 +3,5 @@ __pycache__/
 
 # Local runtime save data
 savegame.json
+savegame.dat
+.savegame.key
