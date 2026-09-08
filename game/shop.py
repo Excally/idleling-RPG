@@ -1,6 +1,7 @@
 from .content import SHOP_ITEMS
 from .constants import clear_screen
 from .models import Item
+from .ui import print_table
 
 
 class ShopService:
@@ -12,8 +13,11 @@ class ShopService:
             clear_screen()
             print("\n=== SHOP ===")
             products = sorted(SHOP_ITEMS.items(), key=lambda entry: (entry[1]["price"], entry[1]["name"].lower()))
-            for key, product in products:
-                print(f"{key}. {product['name']} - {product['price']} gold")
+            print_table(
+                ("#", "Product", "Price", "Type"),
+                [(key, product["name"], f"{product['price']} gold", "Material" if "material" in product else product["item"].item_type) for key, product in products],
+                (4, 30, 14, 18),
+            )
             choice = input("Choose an item, or 0 to return: ").strip()
             if choice in {"", "0"}:
                 return

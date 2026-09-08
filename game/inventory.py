@@ -1,5 +1,6 @@
 from .constants import EQUIPMENT_SLOTS, ITEM_TYPE_ORDER, RARITY_ORDER, color_text, rarity_text
 from .models import Item
+from .ui import print_table, show_detail
 
 
 class InventoryService:
@@ -49,6 +50,8 @@ class InventoryService:
             section = "Consumables" if item.item_type == "Healing Potion" else item.item_type
             grouped.setdefault(section, []).append(item)
         index = 1
+        rows = []
+        item_lookup = {}
         section_order = list(EQUIPMENT_SLOTS) + ["Consumables", "Misc"]
         for section in section_order:
             if section not in grouped:
@@ -58,13 +61,16 @@ class InventoryService:
                 action = "equip" if item.item_type in EQUIPMENT_SLOTS else "use"
                 display_name = rarity_text(item.name, item.rarity)
                 rarity = rarity_text(item.rarity, item.rarity)
-                print(f"{index:>2}. {display_name} x{item.quantity}")
                 if item.item_type == "Healing Potion":
-                    print(f"    {rarity} | {item.grade} | heals {item.value} HP | {action}")
+                    stats = f"{item.grade}, heals {item.value} HP"
                 else:
                     enchantment = f" | {item.enchantment}" if item.enchantment != "None" else ""
-                    print(f"    {rarity} | {self._item_stats(item)} | power {item.value}{enchantment} | {action}")
+                    stats = f"{self._item_stats(item)}{enchantment}"
+                rows.append((index, display_name, item.item_type, rarity, item.quantity, stats, action))
+                item_lookup[index] = item
                 index += 1
+        print_table(("#", "Item", "Type", "Rarity", "Qty", "Stats", "Use"), rows, (4, 28, 14, 12, 5, 28, 8))
+        return item_lookup
 
     def show_and_manage(self):
         sort_mode = "type"
@@ -73,7 +79,7 @@ class InventoryService:
             print("=== INVENTORY ===")
             self._show_equipment()
             sorted_items = self._sorted_inventory(sort_mode)
-            self._show_bag(sorted_items)
+            item_lookup = self._show_bag(sorted_items)
             print(f"Sort: {sort_mode} | Commands: number=equip/use, S=sort, 0=return")
             choice = input("Choice: ").strip().lower()
             if choice in {"", "0"}:
@@ -82,11 +88,12 @@ class InventoryService:
                 sort_choice = input("Sort by: 1 Type, 2 Name, 3 Rarity, 4 Power, 0 Cancel: ").strip()
                 sort_mode = {"1": "type", "2": "name", "3": "rarity", "4": "power"}.get(sort_choice, sort_mode)
                 continue
-            if not choice.isdigit() or not 1 <= int(choice) <= len(sorted_items):
+            if not choice.isdigit() or int(choice) not in item_lookup:
                 print("Invalid item choice.")
                 input("Press Enter to continue: ")
                 continue
-            item = sorted_items[int(choice) - 1]
+            item = item_lookup[int(choice)]
+            show_detail("Selected Item", [item.name, f"{item.item_type} | {item.rarity} | Power {item.value}"])
             if item.item_type in self.player.equipment:
                 self._equip(item)
             elif item.item_type == "Healing Potion":

@@ -1,4 +1,5 @@
 from .constants import EQUIPMENT_SLOTS, MAPS, MAX_WEEKLY_MOBS, SKILL_CATEGORY_COLORS, SKILL_CATEGORY_ORDER, clear_screen, color_text, health_text
+from .ui import print_table, show_detail
 
 
 class MenuService:
@@ -34,11 +35,12 @@ class MenuService:
 
     def choose_map(self):
         print("\n--- CHOOSE MAP ---")
+        map_rows = []
         for key, map_data in MAPS.items():
             marker = "ACTIVE" if key == self.player.current_map else ""
             monsters = ", ".join(map_data["monsters"])
-            print(f"{key}. {map_data['name']} | {map_data['difficulty']} | monsters: {monsters}")
-            print(f"   Rank chance: miniboss {map_data['rank_chances']['Miniboss']:.1%}, boss {map_data['rank_chances']['Boss']:.1%} | pity {map_data['miniboss_pity']}/{map_data['boss_pity']} {marker}")
+            map_rows.append((key, map_data["name"], map_data["difficulty"], monsters, f"M {map_data['rank_chances']['Miniboss']:.1%} / B {map_data['rank_chances']['Boss']:.1%}", f"{map_data['miniboss_pity']} / {map_data['boss_pity']}", marker))
+        print_table(("#", "Map", "Difficulty", "Monsters", "Special ranks", "Pity", "State"), map_rows, (4, 20, 12, 32, 20, 12, 10))
         choice = input("Map number, or Enter to cancel: ").strip()
         if choice in MAPS:
             self.player.current_map = choice
@@ -54,23 +56,26 @@ class MenuService:
             active_skills = sorted(active_skills, key=lambda skill: (SKILL_CATEGORY_ORDER.get(skill.category, 99), skill.name.lower()))
             passive_skills = sorted(passive_skills, key=lambda skill: skill.name.lower())
             print("Active skills:")
+            active_rows = []
             for index, skill in enumerate(active_skills, 1):
                 marker = "SELECTED" if index - 1 == self.player.active_skill else ""
                 category = color_text(skill.category, SKILL_CATEGORY_COLORS.get(skill.category, ""))
-                print(f"{index:>2}. {skill.name} [{category}] {marker}")
-                print(f"    Trigger {skill.proc_chance:.0%} | Damage x{skill.damage_multiplier:.1f} | {skill.effect_text}")
+                active_rows.append((index, skill.name, category, f"{skill.proc_chance:.0%}", f"x{skill.damage_multiplier:.1f}", marker))
+            print_table(("#", "Skill", "Category", "Trigger", "Damage", "State"), active_rows, (4, 24, 12, 9, 9, 10))
             if passive_skills:
                 print("\nPassive skills:")
+                passive_rows = []
                 for skill in passive_skills:
                     category = color_text(skill.category, SKILL_CATEGORY_COLORS.get(skill.category, ""))
-                    print(f"- {skill.name} [{category}]")
-                    print(f"  Always active | {skill.effect_text}")
+                    passive_rows.append((skill.name, category, "Always active", skill.effect_text))
+                print_table(("Skill", "Category", "State", "Effect"), passive_rows, (24, 12, 14, 42))
             choice = input("Skill number, or 0 to return: ").strip()
             if choice in {"", "0"}:
                 return
             if choice.isdigit() and 1 <= int(choice) <= len(active_skills):
                 self.player.active_skill = int(choice) - 1
                 print(f"Active skill: {active_skills[self.player.active_skill].name}.")
+                show_detail("Selected Skill", [active_skills[self.player.active_skill].effect_text])
                 input("Press Enter to continue managing skills: ")
 
     def train(self):

@@ -1,6 +1,7 @@
 from .content import RECIPES
 from .constants import clear_screen
 from .models import Item
+from .ui import print_table
 
 
 class CraftingService:
@@ -12,9 +13,11 @@ class CraftingService:
             clear_screen()
             print("\n=== CRAFTING ===")
             recipes = sorted(RECIPES.items(), key=lambda entry: entry[1]["name"].lower())
-            for key, recipe in recipes:
-                ingredients = ", ".join(f"{name} x{amount}" for name, amount in recipe["cost"].items())
-                print(f"{key}. {recipe['name']} ({ingredients})")
+            print_table(
+                ("#", "Recipe", "Ingredients"),
+                [(key, recipe["name"], ", ".join(f"{name} x{amount}" for name, amount in recipe["cost"].items())) for key, recipe in recipes],
+                (4, 30, 48),
+            )
             choice = input("Choose a recipe, or 0 to return: ").strip()
             if choice in {"", "0"}:
                 return
