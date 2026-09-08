@@ -1,0 +1,181 @@
+{
+    "version": 2,
+    "level": 9,
+    "exp": 38,
+    "gold": 255,
+    "stats": {
+        "ATK": 46,
+        "CRIT_CHANCE": 0.05,
+        "CRIT_DMG": 1.5
+    },
+    "turn_counter": 116,
+    "equipment": {
+        "Weapon": {
+            "name": "[Uncommon] Iron Sword",
+            "item_type": "Weapon",
+            "behavior": "Equip",
+            "value": 12,
+            "quantity": 1,
+            "rarity": "Uncommon",
+            "grade": "Standard",
+            "enchantment": "None"
+        },
+        "Armor": {
+            "name": "\u001b[92m[Rare]\u001b[0m Protective Robe",
+            "item_type": "Armor",
+            "behavior": "Equip",
+            "value": 12,
+            "quantity": 1,
+            "rarity": "Rare",
+            "grade": "Standard",
+            "enchantment": "None"
+        },
+        "Helmet": {
+            "name": "[Mythical] Steel Helm",
+            "item_type": "Helmet",
+            "behavior": "Equip",
+            "value": 54,
+            "quantity": 1,
+            "rarity": "Mythical",
+            "grade": "Standard",
+            "enchantment": "None"
+        },
+        "Gloves": {
+            "name": "Leather Gloves",
+            "item_type": "Gloves",
+            "behavior": "Equip",
+            "value": 5,
+            "quantity": 1,
+            "rarity": "Common",
+            "grade": "Standard",
+            "enchantment": "None"
+        },
+        "Boots": null,
+        "Accessory": null
+    },
+    "inventory": [
+        {
+            "name": "Iron Sword",
+            "item_type": "Weapon",
+            "behavior": "Equip",
+            "value": 10,
+            "quantity": 4,
+            "rarity": "Common",
+            "grade": "Standard",
+            "enchantment": "None"
+        },
+        {
+            "name": "Protective Robe",
+            "item_type": "Armor",
+            "behavior": "Equip",
+            "value": 8,
+            "quantity": 2,
+            "rarity": "Common",
+            "grade": "Standard",
+            "enchantment": "None"
+        },
+        {
+            "name": "Healing Potion",
+            "item_type": "Healing Potion",
+            "behavior": "Consume",
+            "value": 50,
+            "quantity": 71,
+            "rarity": "Common",
+            "grade": "Standard",
+            "enchantment": "None"
+        },
+        {
+            "name": "Magic Staff",
+            "item_type": "Weapon",
+            "behavior": "Equip",
+            "value": 12,
+            "quantity": 1,
+            "rarity": "Common",
+            "grade": "Standard",
+            "enchantment": "None"
+        },
+        {
+            "name": "Voidwalker Treads",
+            "item_type": "Boots",
+            "behavior": "Equip",
+            "value": 33,
+            "quantity": 1,
+            "rarity": "Common",
+            "grade": "Standard",
+            "enchantment": "None"
+        },
+        {
+            "name": "Stormguard Cuirass",
+            "item_type": "Armor",
+            "behavior": "Equip",
+            "value": 36,
+            "quantity": 1,
+            "rarity": "Common",
+            "grade": "Standard",
+            "enchantment": "None"
+        },
+        {
+            "name": "Nullweave Gloves",
+            "item_type": "Gloves",
+            "behavior": "Equip",
+            "value": 33,
+            "quantity": 1,
+            "rarity": "Common",
+            "grade": "Standard",
+            "enchantment": "None"
+        },
+        {
+            "name": "[Uncommon] Steel Longsword",
+            "item_type": "Weapon",
+            "behavior": "Equip",
+            "value": 18,
+            "quantity": 1,
+            "rarity": "Uncommon",
+            "grade": "Standard",
+            "enchantment": "None"
+        },
+        {
+            "name": "Standard Healing Potion",
+            "item_type": "Healing Potion",
+            "behavior": "Consume",
+            "value": 100,
+            "quantity": 7,
+            "rarity": "Common",
+            "grade": "Standard",
+            "enchantment": "None"
+        },
+        {
+            "name": "Dragon Eye",
+            "item_type": "Accessory",
+            "behavior": "Equip",
+            "value": 18,
+            "quantity": 1,
+            "rarity": "Common",
+            "grade": "Standard",
+            "enchantment": "None"
+        },
+        {
+            "name": "[Uncommon] Dragon Eye",
+            "item_type": "Accessory",
+            "behavior": "Equip",
+            "value": 21,
+            "quantity": 1,
+            "rarity": "Uncommon",
+            "grade": "Standard",
+            "enchantment": "None"
+        }
+    ],
+    "active_skill": 12,
+    "current_map": "1",
+    "week_key": "2026-W37",
+    "mobs_this_week": 96,
+    "hp": 1130,
+    "max_hp": 1130,
+    "materials": {
+        "Herb": 33,
+        "Iron Shard": 22,
+        "Monster Core": 14
+    },
+    "encounters_since_miniboss": 29,
+    "encounters_since_boss": 65
+}

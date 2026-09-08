@@ -1,0 +1,1 @@
+"""Modular terminal game package."""
