@@ -56,7 +56,6 @@ class InventoryService:
         for section in section_order:
             if section not in grouped:
                 continue
-            print(f"\n[{section.upper()}]")
             for item in grouped[section]:
                 action = "equip" if item.item_type in EQUIPMENT_SLOTS else "use"
                 display_name = rarity_text(item.name, item.rarity)
@@ -93,7 +92,6 @@ class InventoryService:
                 input("Press Enter to continue: ")
                 continue
             item = item_lookup[int(choice)]
-            show_detail("Selected Item", [item.name, f"{item.item_type} | {item.rarity} | Power {item.value}"])
             if item.item_type in self.player.equipment:
                 self._equip(item)
             elif item.item_type == "Healing Potion":
@@ -101,9 +99,10 @@ class InventoryService:
                 old_hp = self.player.hp
                 self.player.heal(item.value)
                 print(f"Used {item.name}: {old_hp} -> {self.player.hp} HP.")
+                input("Press Enter to continue: ")
             else:
                 print("This item cannot be used here.")
-            input("Press Enter to continue managing inventory: ")
+                input("Press Enter to continue: ")
 
     def _equip(self, item):
         slot = item.item_type

@@ -7,17 +7,19 @@ MONSTER_RANKS = {
     "Miniboss": {"hp": 2.5, "attack": 1.6, "reward": 3.0},
     "Boss": {"hp": 6.0, "attack": 2.5, "reward": 10.0},
 }
+RANK_ORDER = {"Normal": 0, "Miniboss": 1, "Boss": 2}
 
 
 def _rank_for_encounter(map_data, encounters_since_miniboss, encounters_since_boss):
     chances = map_data["rank_chances"]
-    if encounters_since_boss >= map_data["boss_pity"]:
+    max_rank = map_data["max_monster_rank"]
+    if RANK_ORDER[max_rank] >= RANK_ORDER["Boss"] and encounters_since_boss >= map_data["boss_pity"]:
         return "Boss", "Boss pity triggered"
-    if encounters_since_miniboss >= map_data["miniboss_pity"]:
+    if RANK_ORDER[max_rank] >= RANK_ORDER["Miniboss"] and encounters_since_miniboss >= map_data["miniboss_pity"]:
         return "Miniboss", "Miniboss pity triggered"
-    if random.random() < chances["Boss"]:
+    if RANK_ORDER[max_rank] >= RANK_ORDER["Boss"] and random.random() < chances["Boss"]:
         return "Boss", "Boss chance triggered"
-    if random.random() < chances["Miniboss"]:
+    if RANK_ORDER[max_rank] >= RANK_ORDER["Miniboss"] and random.random() < chances["Miniboss"]:
         return "Miniboss", "Miniboss chance triggered"
     return "Normal", "Normal encounter"
 

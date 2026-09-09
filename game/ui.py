@@ -32,7 +32,10 @@ def print_table(headers, rows, widths=None):
     if widths is None:
         available = terminal_width() - (len(headers) * 3) - 1
         widths = [max(8, min(28, available // len(headers))) for _ in headers]
-    widths = list(widths)
+    widths = [
+        max(width, visible_length(headers[index]), *(visible_length(row[index]) for row in rows))
+        for index, width in enumerate(widths)
+    ]
     separator = "+" + "+".join("-" * (width + 2) for width in widths) + "+"
 
     def row(values):

@@ -23,7 +23,10 @@ class ExplorationService:
     def choose_map(self):
         print("\n--- EXPEDITION MAP ---")
         for key, map_data in MAPS.items():
-            print(f"{key}. {map_data['name']} | {map_data['difficulty']} | monster level +{map_data['monster_level_bonus']}")
+            print(
+                f"{key}. {map_data['name']} | {map_data['difficulty']} | "
+                f"monster level +{map_data['monster_level_bonus']} | max rank {map_data['max_monster_rank']}"
+            )
         choice = input("Choose a map for this expedition: ").strip()
         if choice not in MAPS:
             print("Invalid map. Expedition cancelled.")
@@ -31,7 +34,11 @@ class ExplorationService:
         self.player.current_map = choice
         map_data = MAPS[choice]
         print(f"Map selected: {map_data['name']} ({map_data['difficulty']}).")
-        print("Item tiers: " + " | ".join(f"{tier} {chance}" for tier, chance in DROP_RATE_REFERENCE))
+        print(
+            "Loot ceiling: "
+            f"{map_data['max_item_rarity']} rarity, base power {map_data['max_item_power']}"
+        )
+        print("Global tier weights: " + " | ".join(f"{tier} {chance}" for tier, chance in DROP_RATE_REFERENCE))
         return map_data
 
     def run_session(self):
@@ -65,10 +72,9 @@ class ExplorationService:
                     self.player.encounters_since_miniboss += 1
                     self.player.encounters_since_boss += 1
                 display_name = color_text(enemy.name, RANK_COLORS.get(enemy.rank, ""))
-                rank_label = color_text(enemy.rank, RANK_COLORS.get(enemy.rank, ""))
                 print("\n" + "=" * 64)
                 print(f"ENCOUNTER {self.player.mobs_this_week}/{MAX_WEEKLY_MOBS}")
-                print(f"Enemy: [{rank_label}] {display_name}")
+                print(f"Enemy: {display_name}")
                 print(f"Stats: HP {enemy.hp} | ATK {enemy.attack} | DEF {enemy.defense} | SPD {enemy.speed} | Dodge {enemy.dodge_chance:.0%}")
                 print("=" * 64)
                 if trigger != "Normal encounter":
@@ -90,11 +96,11 @@ class ExplorationService:
                 item_drop = None
                 if potion_drop:
                     drops.append(f"{potion_grade} Healing Potion x1")
-                if random.random() < (0.95 if enemy.rank == "Boss" else 0.65 if enemy.rank == "Miniboss" else 0.3):
-                    item_drop = generate_item()
+                item_drop_chance = 0.8 if enemy.rank == "Boss" else 0.5 if enemy.rank == "Miniboss" else 0.2
+                if random.random() < item_drop_chance:
+                    item_drop = generate_item(map_data["max_item_power"], map_data["max_item_rarity"])
                     display_name = rarity_text(item_drop.name, item_drop.rarity)
-                    rarity = rarity_text(item_drop.rarity, item_drop.rarity)
-                    drops.append(f"{rarity} {display_name} [Power: +{item_drop.value}]")
+                    drops.append(f"{display_name} ({item_drop.rarity}, Power +{item_drop.value})")
                 print("Drops:")
                 for drop in drops:
                     print(f"  - {drop}")

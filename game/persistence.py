@@ -44,6 +44,13 @@ def item_from_dict(data):
         name = name.replace(old_name, new_name)
     for old_rarity, new_rarity in OLD_RARITIES.items():
         name = name.replace(old_rarity, new_rarity)
+    # Strip legacy [RarityLabel] prefix baked into old item names
+    from .content import ITEM_TIERS
+    for tier in ITEM_TIERS:
+        prefix = f"[{tier['label']}] "
+        if name.startswith(prefix):
+            name = name[len(prefix):]
+            break
     item_type = data.get("item_type", "Misc")
     item_type = OLD_TYPES.get(item_type, item_type)
     if item_type == "Exploration":
